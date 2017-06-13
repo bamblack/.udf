@@ -1,0 +1,50 @@
+if [ -z "$1" ]
+    then
+        echo "No branch name supplied to rebase from."
+        return 1
+fi
+
+if [ -z "$(git rev-parse --is-inside-work-tree 2> /dev/null)" ]
+    then
+        echo "This command must be run inside of a git repository"
+        return 1
+fi
+
+if [ -z "$(git rev-parse --verify $1 2> /dev/null)" ]
+    then
+        echo "A valid branch name must be supplied"
+        return 1
+fi
+
+currentBranch="$(getbranch)"
+stashed=false
+if [ -z "$(git diff-index --quiet HEAD --)" ]
+    then
+        echo "Stashing changes before any rebases are attempted"
+        stashed=true
+        git stash &> /dev/null
+fi
+
+git checkout $1
+headSHA="$(git rev-parse HEAD)"
+
+for x in `git branch --no-merged`
+    do
+        git checkout $x
+        if [ -z "$(git branch --contains $headSHA | grep $x 2> /dev/null)" ]
+            then
+                echo "Rebasing..."
+                git rebase -i $1
+                wait
+            else
+                echo "This branch has already been rebased"
+        fi
+done
+
+if [ $stashed ]
+    then
+        echo "Popping stash"
+        git stash pop &> /dev/null
+fi
+
+git checkout $currentBranch &> /dev/null
