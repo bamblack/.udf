@@ -17,13 +17,8 @@ if [ -z "$(git rev-parse --verify $1 2> /dev/null)" ]
 fi
 
 currentBranch="$(getbranch)"
-stashed=false
-if [ -z "$(git diff-index --quiet HEAD --)" ]
-    then
-        echo "Stashing changes before any rebases are attempted"
-        stashed=true
-        git stash &> /dev/null
-fi
+stashid="$(uuidgen)"
+git stash save -u $stashid
 
 git checkout $1
 headSHA="$(git rev-parse HEAD)"
@@ -41,10 +36,10 @@ for x in `git branch --no-merged`
         fi
 done
 
-if [ $stashed ]
+if [ -n "$(git stash list | grep $stashid 2> /dev/null)" ]
     then
         echo "Popping stash"
-        git stash pop &> /dev/null
+        git stash pop
 fi
 
 git checkout $currentBranch &> /dev/null
