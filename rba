@@ -16,17 +16,17 @@ if [ -z "$(git rev-parse --verify $1 2> /dev/null)" ]
         return 1
 fi
 
-currentBranch="$(getbranch)"
-stashid="$(uuidgen)"
-git stash save -u $stashid
+originalBranch="$(getbranch)"
+stashId="$(uuidgen)"
+git stash save -u $stashId
 
 git checkout $1
-headSHA="$(git rev-parse HEAD)"
+rebaseBranchSHA="$(git rev-parse HEAD)"
 
 for x in `git branch --no-merged`
     do
         git checkout $x
-        if [ -z "$(git branch --contains $headSHA | grep $x 2> /dev/null)" ]
+        if [ -z "$(git branch --contains $rebaseBranchSHA | grep $x 2> /dev/null)" ]
             then
                 echo "Rebasing..."
                 git rebase -i $1
@@ -36,10 +36,10 @@ for x in `git branch --no-merged`
         fi
 done
 
-if [ -n "$(git stash list | grep $stashid 2> /dev/null)" ]
+if [ -n "$(git stash list | grep $stashId 2> /dev/null)" ]
     then
         echo "Popping stash"
         git stash pop
 fi
 
-git checkout $currentBranch &> /dev/null
+git checkout $originalBranch &> /dev/null
