@@ -23,10 +23,10 @@ git stash save -u $stashId
 git checkout $1
 rebaseBranchSHA="$(git rev-parse HEAD)"
 
-for x in `git branch --no-merged`
+for unmerged in `git branch --no-merged`
     do
-        git checkout $x
-        if [ -z "$(git branch --contains $rebaseBranchSHA | grep $x 2> /dev/null)" ]
+        git checkout $unmerged
+        if [ -z "$(git branch --contains $rebaseBranchSHA | grep $unmerged 2> /dev/null)" ]
             then
                 echo "Rebasing..."
                 git rebase -i $1
